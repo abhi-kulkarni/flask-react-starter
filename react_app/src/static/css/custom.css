@@ -1,0 +1,5 @@
+.btn-outline-danger:hover, .btn-outline-danger:focus, .btn-outline-danger:active, .btn-outline-danger.active, .open>.dropdown-toggle.btn-outline-danger .btn-outline-dangery:active:focus {
+            color: rgb(240, 35, 35) !important; 
+            background-color: #fff !important;
+            border-color: #fff !important; /*set the color you want here*/
+}   
