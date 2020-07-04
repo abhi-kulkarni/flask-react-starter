@@ -3,3 +3,26 @@
             background-color: #fff !important;
             border-color: #fff !important; /*set the color you want here*/
 }   
+
+h2.separator {
+    width: 100%; 
+    text-align: center; 
+    border-bottom: 1px solid #D3D3D3; 
+    line-height: 0.1em;
+    margin: 10px 0 20px; 
+ } 
+ 
+ h2.separator span { 
+     background:#fff; 
+     padding:0 10px; 
+ }
+ 
+.error {
+    border: 1px solid red;
+ }
+
+ .errorMessage {
+    color: red;
+    font-size: 0.75em;
+    display: relative;
+  }
