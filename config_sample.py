@@ -1,6 +1,6 @@
 LOCALE = 'en_US.UTF-8'
 SQLALCHEMY_DATABASE_URI = ""
-BASE_URL="http://amplify.com"
+BASE_URL=""
 SECRET_KEY = ""
 DEBUG = True
 DEBUG_EMAIL_SEND = True
