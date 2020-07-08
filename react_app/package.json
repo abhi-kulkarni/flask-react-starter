@@ -9,11 +9,17 @@
     "axios": "^0.19.2",
     "bootstrap": "^4.5.0",
     "formik": "^2.1.4",
+    "http-proxy-middleware": "^1.0.4",
+    "https-localhost": "^4.6.0",
     "jwt-decode": "^2.2.0",
     "react": "^16.13.1",
     "react-bootstrap": "^1.0.1",
     "react-dom": "^16.13.1",
+    "react-facebook-login": "^4.1.1",
+    "react-google-login": "^5.1.20",
     "react-icons": "^3.10.0",
+    "react-loader-spinner": "^3.1.14",
+    "react-promise-tracker": "^2.1.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.1",
     "redux-devtools-extension": "^2.13.8",
@@ -21,11 +27,12 @@
     "yup": "^0.29.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "set HTTPS=true&&set PORT=443&&react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  "proxy": "http://localhost:5000/",
   "eslintConfig": {
     "extends": "react-app"
   },

@@ -4,6 +4,7 @@ import Home from './pages/home'
 import Login from './pages/login'
 import SignUp from './pages/sign_up'
 import Nav from './components/nav'
+import {Alert} from 'react-bootstrap'
 import { BrowserRouter as Router, Switch, Route} from 'react-router-dom'
 import {useSelector} from 'react-redux'
 import './App.css';

@@ -1,3 +1,7 @@
 export const SIGN_IN = "SIGN_IN"
 
 export const SIGN_OUT = "SIGN_OUT"
+
+export const USER_CREATED_SUCCESS = "USER_CREATED_SUCCESS"
+
+export const SPINNER_OVERLAY = "SPINNER_OVERLAY"

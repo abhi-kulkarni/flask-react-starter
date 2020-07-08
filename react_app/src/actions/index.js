@@ -22,3 +22,9 @@ export const sign_out = () => {
         type: 'SIGN_OUT'
     }
 }
+
+export const user_created_success = () => {
+    return {
+        type: 'USER_CREATED_SUCCESS'
+    }
+}
