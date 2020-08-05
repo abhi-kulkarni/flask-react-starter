@@ -1,36 +1,20 @@
-import React from 'react';
-import Button from 'react-bootstrap/Button'
+import React, {useState, useEffect} from 'react';
 import {useSelector, useDispatch} from 'react-redux'
-import {increment, decrement, sign_in, sign_out} from '../redux'
+import Nav from '../components/nav'
+import axios from 'axios'
+
 
 function About(){
-    const counter = useSelector(state => state.counter.counter);
+
     const isLoggedIn = useSelector(state => state.session.isLoggedIn)
+    const access = localStorage.getItem("userAccessToken")
     const dispatch = useDispatch();
+    const user_data = useSelector(state => state.session.user_data);
+    const user_id = user_data["userId"];
+
     return (
         <div>
-            <h1>About page</h1>
-            <div className="mb-2">
-                <Button variant="primary" size="lg">
-                Large button
-                </Button>{' '}
-                <Button variant="secondary" size="lg">
-                Large button
-                </Button>
-            </div>
-            <div>
-            <Button variant="primary" size="sm">
-            Small button
-                </Button>{' '}
-            <Button variant="secondary" size="sm">
-            Small button
-            </Button>
-            </div>
-            <h3>Counter - {counter}</h3>
-            <Button onClick={() => dispatch(increment())}>+</Button><br/><br/>
-            <Button variant="success" onClick={() => dispatch(decrement())}>-</Button>
-            <h3>Logged in - {JSON.stringify(isLoggedIn)}</h3>
-    <Button size="sm" variant="primary" onClick={() => dispatch(sign_in())}>{isLoggedIn?'Sign Out':'Sign In'}</Button>
+            <h3>This is About Page </h3>
         </div>
     )
 }

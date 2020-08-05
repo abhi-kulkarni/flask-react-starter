@@ -28,6 +28,9 @@ import store from '../redux/store'
     const formValid = ({ formErrors, ...rest }) => {
         let valid = true;
         
+        console.log(rest)
+        console.log(formErrors)
+
         // validate form errors being empty
         Object.values(formErrors).forEach(val => {
             val.length > 0 && (valid = false);
@@ -78,6 +81,7 @@ export class SignUp extends Component {
     }
 
     signup(res, provider) {
+    
         let random_str = this.randomId(5);
         let store_overlay = store.getState().session.spinner_overlay;
         this.setState({
@@ -92,18 +96,37 @@ export class SignUp extends Component {
                 username: (res.profileObj.givenName+res.profileObj.familyName).toLowerCase()+random_str,
                 email: res.profileObj.email,
                 profile_picture_url: res.profileObj.imageUrl,
-                ProviderId: "Google",
+                provider: "Google",
                 sso:true
             }
-        }else{
+        }else if(provider === "Facebook"){
             post_data = {
                 email:res.email,
                 username:res.name.split(" ").join("").toLowerCase()+random_str,
                 gender:res.gender,
                 profile_picture_url:res.picture.data.url,
                 country:res.location.location.country,
-                ProviderId: "Facebook",
+                provider: "Facebook",
                 sso:true
+            }
+        }else{
+            if(res.imagePreviewUrl === ""){
+                let img = ""
+                if(res.gender === "male"){
+                    img = img_avatar_male;
+                }else if(res.gender === "female"){
+                    img = img_avatar_female;
+                }
+                res.imagePreviewUrl = this.convertToDataURL(img)
+            }
+            post_data = {
+                email:res.email,
+                username:res.username,
+                gender:res.gender,
+                profile_picture_url:res.imagePreviewUrl,
+                country:res.country,
+                password:res.password,
+                sso:false
             }
         }
         trackPromise(
@@ -111,7 +134,8 @@ export class SignUp extends Component {
             if(response.data.ok){
                 let msg = response.data.msg;
                 this.setState({
-                    overlay:false
+                    overlay:false,
+                    redirect:true
                 })
                 this.dispatch(spinner_overlay(false))
                 this.dispatch(user_created_success())
@@ -157,6 +181,19 @@ export class SignUp extends Component {
         password.type =  password.value && password.value.length > 0 && state?'text':'password';
     }
 
+    convertToDataURL =  (img) => {
+        var image = new Image();
+        image.src = img;
+        var canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(image, 0, 0);
+        var dataURL = canvas.toDataURL("image/jpeg");
+        let image_url = dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
+        return dataURL
+    }
+
     handleProfileImageChange = (e) => {
         e.preventDefault()
         let reader = new FileReader();
@@ -181,29 +218,27 @@ export class SignUp extends Component {
     }
 
     onSubmit = (e) => {
-        
-        if (formValid(this.state)) {
+
+        e.preventDefault()
+        let formData = {};
+        formData["formErrors"] = this.state.formErrors
+        formData["username"] = this.state.email;
+        formData["email"] = this.state.usernemailame;
+        formData["gender"] = this.state.gender;
+        formData["country"] = this.state.country;
+        formData["password"] = this.state.password;
+        formData["confirm_password"] = this.state.confirm_password;
+        if (formValid(formData)) {
+            this.signup(this.state)
             this.setState({
                 isValid:true,
-                redirect:true
             });
-            console.log(`
-              --SUBMITTING--
-              Username: ${this.state.username}
-              Email: ${this.state.email}
-              Country: ${this.state.country}
-              Gender: ${this.state.gender}
-              Password: ${this.state.password}
-              Confirm Password: ${this.state.confirm_password}
-              `);
           } else {
             this.setState({
                 isValid:false
             }) 
             console.error("FORM INVALID - DISPLAY ERROR MESSAGE");
           }
-        
-        e.preventDefault()
     }
 
     onChange = (e) => {
@@ -211,6 +246,13 @@ export class SignUp extends Component {
         let formErrors = { ...this.state.formErrors };
         const { name, value } = e.target;
         let password = this.state.password;
+        let curr_password = document.getElementById("password").value;
+        let curr_confirm_password = document.getElementById("confirm_password").value;
+        if(curr_password !== curr_confirm_password && curr_password.length > 0 && curr_confirm_password.length > 0){
+            formErrors.confirm_password_msg = "password and confirm password should be the same";
+        }else{
+            formErrors.confirm_password_msg=""
+        }
         this.validate(name, value, formErrors, password)
         this.setState({
             formErrors,
@@ -239,7 +281,7 @@ export class SignUp extends Component {
                 break;    
             case "password":
                 formErrors.password =
-                passwordRegex.test(value) ? "" : value.length > 0 ? "minimum 6 characaters, maximum 10 characters, one uppercase, one lowercase and one special character required" : "";
+                passwordRegex.test(value) ? "" : value.length > 0 ?  "minimum 6 characaters, maximum 10 characters, one uppercase, one lowercase and one special character required" : "";
                 break;
             case "confirm_password":
                 formErrors.confirm_password_msg =
@@ -282,15 +324,15 @@ export class SignUp extends Component {
         }
         const responseFacebook = (response) => {
             console.log("FB")
-            this.signup(response, "FaceBook");
+            this.signup(response, "Facebook");
           }
         const { formErrors } = this.state;
         const redirect = this.state.redirect;
         let imagePreviewUrl = this.state.imagePreviewUrl;
         let imagePreview = (<img style={{width:"60px", borderRadius:"50%"}} src={profile_photo_default} />);
-        if(this.state.gender === 'Male'){
+        if(this.state.gender === 'male'){
             imagePreview = (<img style={{width:"60px", borderRadius:"50%"}} src={img_avatar_male} />);
-        }else if(this.state.gender === 'Female'){
+        }else if(this.state.gender === 'female'){
             imagePreview = (<img style={{width:"60px", borderRadius:"50%"}}  src={img_avatar_female} />);
         }    
         if (imagePreviewUrl) {

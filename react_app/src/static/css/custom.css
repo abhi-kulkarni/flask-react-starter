@@ -85,3 +85,9 @@ h2.separator {
     z-index: 2;
     cursor: pointer;
 }
+
+#dropdown-menu-align-right{
+    background-color: #343A40 !important;
+    border:none;
+    border-color:white!important;
+}

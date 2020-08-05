@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 import flask
 from sqlalchemy import func
 from flask_cors import CORS
@@ -6,8 +6,10 @@ from decimal import Decimal
 from werkzeug.security import check_password_hash, generate_password_hash
 import json
 from flask_sqlalchemy import SQLAlchemy
+import datetime
 from functools import wraps
 import sqlalchemy
+import jwt
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -32,10 +34,31 @@ cors = CORS(app, allow_headers=[
     "Content-Type", "Authorization", "Access-Control-Allow-Credentials", "withCredentials"],
             supports_credentials=True, resources={r"/*": {"origins": "*"}})
 
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+
+        if 'x-access-token' in request.headers:
+            token = request.headers['x-access-token']
+
+        if not token:
+            return jsonify({'message' : 'Token is missing!'}), 401
+
+        try: 
+            data = jwt.decode(token, app.config['SECRET_KEY'])
+        except:
+            return flask.jsonify({'message' : 'Token is invalid!'}), 401
+
+        return f(*args, **kwargs)
+
+    return decorated
+
 def unauthorized_abort():
     if flask.request.is_xhr:
         return flask.abort(401)
-    else:"
+    else:
         return flask.redirect(flask.url_for("user.login"))
 
 @app.route("/hello", methods=["GET"])
@@ -47,22 +70,26 @@ def hello():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     from models import User
-    if flask.request.method == "POST" and "username" in flask.request.json["post_data"] and "password" in flask.request.json["post_data"]:
-        users = db.session.query(User).filter(func.lower(flask.request.json["post_data"]["username"]) == func.lower(User.email)).all()
-        if len(users) != 0:
-            user = users[0]
-        if check_password_hash(user.password, flask.request.json["post_data"]["password"]):
-            flask.session["user_id"] = user.id
-            flask.session["user_email"] = user.email
-            flask.session["username"] = user.firstName+' '+user.lastName
+    if flask.request.method == "POST" and "email" in flask.request.json["post_data"] and "password" in flask.request.json["post_data"]:
+        user_data = db.session.query(User).filter(func.lower(flask.request.json["post_data"]["email"]) == func.lower(User.email)).all()
+        print(user_data)
+        if len(user_data) != 0:
+            user = user_data[0]
+            if check_password_hash(user.password, flask.request.json["post_data"]["password"]):
+                flask.session["user_id"] = user.id
+                flask.session["user_email"] = user.email
+                flask.session["username"] = user.username
 
+            access_token = jwt.encode({"user_email":user.email, "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}, app.config["SECRET_KEY"])
+                        
             # For Redux
             temp_dict = dict()
             temp_dict["userId"] = user.id
             temp_dict["userEmail"] = user.email
             temp_dict["userName"] = user.username
+            temp_dict["isLoggedIn"] = True
 
-            return flask.jsonify(ok=True, user_data=temp_dict)
+            return flask.jsonify(ok=True, user_data=temp_dict, token=access_token.decode("UTF-8"))
         else:
             return flask.jsonify(ok=False, error="No such user or incorrect password")
     return flask.jsonify(ok=False, error='')
@@ -70,7 +97,7 @@ def login():
 
 @app.route("/get_authenticated_user_information")
 def get_authenticated_user_information():
-    if 'user_id' in flask.session and flask.session["user_id"]:
+    if "user_id" in flask.session and flask.session["user_id"]:
         from models import User
         user = db.session.query(User).get(flask.session["user_id"])
 
@@ -78,6 +105,7 @@ def get_authenticated_user_information():
         temp_dict["userId"] = user.id
         temp_dict["userEmail"] = user.email
         temp_dict["userName"] = user.username
+        temp_dict["isLoggedIn"] = True
 
         flask.session["user_id"] = user.id
         flask.session["user_email"] = user.email
@@ -88,8 +116,33 @@ def get_authenticated_user_information():
         return flask.jsonify(ok=False,is_logged_in=False)
 
 
+@app.route("/get_user_data/<string:user_id>/", methods=["GET"])
+@token_required
+def get_user_data(user_id):
+    from models import User
+
+    user = db.session.query(User).filter(User.id == user_id).first()
+    if user:
+        return flask.jsonify(ok=True, user=user.to_dict())
+    else:
+        return flask.jsonify(ok=False)
+
+
+@app.route("/get_all_users/", methods=["GET"])
+@token_required
+def get_all_users():
+    from models import User
+
+    users = [k.to_dict() for k in db.session.query(User).all()]
+    if users:
+        return flask.jsonify(ok=True, users=users)
+    else:
+        return flask.jsonify(ok=False)
+
+
 @app.route("/change_password", methods=["POST"])
-def submit_password():
+@token_required
+def change_password():
     from models import User
     user = User.query.get(flask.session["user_id"])
     error = ""
@@ -110,23 +163,12 @@ def submit_password():
     return flask.jsonify(ok=True, error=error, msg=msg)
 
 
-@app.route("/logout", methods= ["GET"])
+@app.route("/logout/", methods= ["GET"])
 def logout():
-    if 'user_id' in flask.session:
-        del flask.session["user_id"]
-        del flask.session["user_email"]
-        del flask.session["username"]
+    if "user_id" in flask.session:
+        flask.session.clear()
     return flask.jsonify(ok=True)
 
-
-@app.route("/clear_session", methods=["GET"])
-def clear_session():
-    from flask import session
-
-    if 'user_id' in flask.session:
-        session.clear()
-
-    return flask.jsonify(ok=True)
 
 from admin_views import *
 

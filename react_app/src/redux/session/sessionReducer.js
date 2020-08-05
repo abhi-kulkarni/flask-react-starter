@@ -1,9 +1,10 @@
-import {SIGN_IN, SIGN_OUT, USER_CREATED_SUCCESS, SPINNER_OVERLAY} from './sessionTypes'
+import {SIGN_IN, SIGN_OUT, USER_CREATED_SUCCESS, SPINNER_OVERLAY, USER_DATA} from './sessionTypes'
 
 const initialState = {
     isLoggedIn: false,
     user_created_success:false,
-    spinner_overlay:false
+    spinner_overlay:false,
+    user_data:{}
 }
 
 const sessionReducer = (state=initialState, action) => {
@@ -11,12 +12,12 @@ const sessionReducer = (state=initialState, action) => {
         case SIGN_IN:
             return {
                 ...state,
-                isLoggedIn: !state.isLoggedIn
+                isLoggedIn: true
             }
         case SIGN_OUT:
             return {
                 ...state,
-                isLoggedIn: !state.isLoggedIn
+                isLoggedIn: false
             }
         case USER_CREATED_SUCCESS:
             return {
@@ -27,6 +28,11 @@ const sessionReducer = (state=initialState, action) => {
             return {
                 ...state,
                 spinner_overlay:action.payload
+            }
+        case USER_DATA:
+            return {
+                ...state,
+                user_data: action.payload
             }
         default: return state
     }
